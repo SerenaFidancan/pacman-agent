@@ -172,6 +172,39 @@ wss.on("connection", (socket) => {
             console.log(
                 `Pac-Man auf (${pacmanX}, ${pacmanY}), Feld: ${fieldStatus}`
             );
+
+            if (grid !== null) {
+                const remainingPills =
+                    msg.state.remainingPills || [];
+
+                const coinTargets = remainingPills.map(
+                    (pill) => {
+                        return {
+                            x: Math.round(pill.gridX),
+                            y: Math.round(pill.gridY),
+                            type: pill.type
+                        };
+                    }
+                );
+
+                const start = { x: pacmanX, y: pacmanY };
+
+                const result = findClosestTarget(
+                    grid,
+                    start,
+                    coinTargets
+                );
+
+                if (result === null) {
+                    console.log(
+                        `Kein erreichbarer Coin (${coinTargets.length} Pills, Pac-Man auf (${pacmanX}, ${pacmanY}))`
+                    );
+                } else {
+                    console.log(
+                        `Ziel (${result.target.x}, ${result.target.y}) [${result.target.type}], Distanz: ${result.distance}, Richtung: ${result.nextStep}`
+                    );
+                }
+            }
         } catch (error) {
             console.log(
                 "Nachricht konnte nicht verarbeitet werden."
