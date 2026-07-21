@@ -177,15 +177,20 @@ wss.on("connection", (socket) => {
                 const remainingPills =
                     msg.state.remainingPills || [];
 
-                const coinTargets = remainingPills.map(
-                    (pill) => {
+                const coinTargets = remainingPills
+                    .map((pill) => {
                         return {
                             x: Math.round(pill.gridX),
                             y: Math.round(pill.gridY),
                             type: pill.type
                         };
-                    }
-                );
+                    })
+                    .filter((target) => {
+                        return (
+                            target.x !== pacmanX ||
+                            target.y !== pacmanY
+                        );
+                    });
 
                 const start = { x: pacmanX, y: pacmanY };
 
@@ -203,6 +208,15 @@ wss.on("connection", (socket) => {
                     console.log(
                         `Ziel (${result.target.x}, ${result.target.y}) [${result.target.type}], Distanz: ${result.distance}, Richtung: ${result.nextStep}`
                     );
+
+                    if (result.nextStep !== null) {
+                        socket.send(
+                            JSON.stringify({
+                                type: "action",
+                                direction: result.nextStep
+                            })
+                        );
+                    }
                 }
             }
         } catch (error) {
