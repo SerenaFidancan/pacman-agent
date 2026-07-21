@@ -32,3 +32,60 @@ const start = {
 const result = findClosestTarget(grid, start, coinTargets);
 
 console.log("Ergebnis:", result);
+
+function buildAction(grid, pacman, pills) {
+    const start = {
+        x: Math.round(pacman.gridX),
+        y: Math.round(pacman.gridY)
+    };
+
+    const targets = pills
+        .map((pill) => {
+            return {
+                x: Math.round(pill.gridX),
+                y: Math.round(pill.gridY),
+                type: pill.type
+            };
+        })
+        .filter((target) => {
+            return target.x !== start.x || target.y !== start.y;
+        });
+
+    const result = findClosestTarget(grid, start, targets);
+
+    if (result === null || result.nextStep === null) {
+        return null;
+    }
+
+    return { type: "action", direction: result.nextStep };
+}
+
+const onCoinState = {
+    pacman: { gridX: 3.0, gridY: 1.0 },
+    remainingPills: [
+        { gridX: 3.0, gridY: 1.0, type: "pill" },
+        { gridX: 5.0, gridY: 3.0, type: "powerpill" }
+    ]
+};
+
+const onCoinStart = {
+    x: Math.round(onCoinState.pacman.gridX),
+    y: Math.round(onCoinState.pacman.gridY)
+};
+
+const onCoinTargetsRaw = onCoinState.remainingPills.map((pill) => {
+    return {
+        x: Math.round(pill.gridX),
+        y: Math.round(pill.gridY),
+        type: pill.type
+    };
+});
+
+console.log(
+    "Roh (ohne Filter):",
+    findClosestTarget(grid, onCoinStart, onCoinTargetsRaw)
+);
+console.log(
+    "Gesendete Aktion :",
+    buildAction(grid, onCoinState.pacman, onCoinState.remainingPills)
+);
