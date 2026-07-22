@@ -7,6 +7,19 @@ const {
 
 const PORT = 3000;
 
+const STUCK_LIMIT = 30;
+const BLOCK_DURATION_MS = 10000;
+
+let lastTargetKey = null;
+let lastDistance = null;
+let sameTargetTicks = 0;
+
+const blockedTargets = new Map();
+
+function targetKey(x, y) {
+    return x + "," + y;
+}
+
 const wss = new WebSocketServer({
     port: PORT,
     path: "/pacman"
@@ -137,13 +150,27 @@ wss.on("connection", (socket) => {
 
             const grid = cachedGrid;
 
-            const pacmanX = Math.round(
-                msg.state.pacman.gridX
-            );
+            const pacmanDirection = msg.state.pacman.direction;
 
-            const pacmanY = Math.round(
-                msg.state.pacman.gridY
-            );
+            let pacmanX;
+            let pacmanY;
+
+            if (pacmanDirection === "R") {
+                pacmanX = Math.floor(msg.state.pacman.gridX);
+                pacmanY = Math.round(msg.state.pacman.gridY);
+            } else if (pacmanDirection === "L") {
+                pacmanX = Math.ceil(msg.state.pacman.gridX);
+                pacmanY = Math.round(msg.state.pacman.gridY);
+            } else if (pacmanDirection === "D") {
+                pacmanX = Math.round(msg.state.pacman.gridX);
+                pacmanY = Math.floor(msg.state.pacman.gridY);
+            } else if (pacmanDirection === "U") {
+                pacmanX = Math.round(msg.state.pacman.gridX);
+                pacmanY = Math.ceil(msg.state.pacman.gridY);
+            } else {
+                pacmanX = Math.round(msg.state.pacman.gridX);
+                pacmanY = Math.round(msg.state.pacman.gridY);
+            }
 
             let currentCell;
 
@@ -177,7 +204,15 @@ wss.on("connection", (socket) => {
                 const remainingPills =
                     msg.state.remainingPills || [];
 
-                const coinTargets = remainingPills
+                const now = Date.now();
+
+                for (const [blockedKey, expiresAt] of blockedTargets) {
+                    if (expiresAt <= now) {
+                        blockedTargets.delete(blockedKey);
+                    }
+                }
+
+                const reachableTargets = remainingPills
                     .map((pill) => {
                         return {
                             x: Math.round(pill.gridX),
@@ -192,6 +227,21 @@ wss.on("connection", (socket) => {
                         );
                     });
 
+                const unblockedTargets = reachableTargets.filter((target) => {
+                    return !blockedTargets.has(
+                        targetKey(target.x, target.y)
+                    );
+                });
+
+                let coinTargets;
+
+                if (unblockedTargets.length === 0) {
+                    blockedTargets.clear();
+                    coinTargets = reachableTargets;
+                } else {
+                    coinTargets = unblockedTargets;
+                }
+
                 const start = { x: pacmanX, y: pacmanY };
 
                 const result = findClosestTarget(
@@ -201,10 +251,48 @@ wss.on("connection", (socket) => {
                 );
 
                 if (result === null) {
+                    lastTargetKey = null;
+                    lastDistance = null;
+                    sameTargetTicks = 0;
+
                     console.log(
                         `Kein erreichbarer Coin (${coinTargets.length} Pills, Pac-Man auf (${pacmanX}, ${pacmanY}))`
                     );
                 } else {
+                    const currentTargetKey = targetKey(
+                        result.target.x,
+                        result.target.y
+                    );
+
+                    if (currentTargetKey === lastTargetKey) {
+                        if (
+                            lastDistance !== null &&
+                            result.distance < lastDistance
+                        ) {
+                            lastDistance = result.distance;
+                            sameTargetTicks = 1;
+                        } else {
+                            sameTargetTicks++;
+                        }
+                    } else {
+                        lastTargetKey = currentTargetKey;
+                        lastDistance = result.distance;
+                        sameTargetTicks = 1;
+                    }
+
+                    if (sameTargetTicks > STUCK_LIMIT) {
+                        blockedTargets.set(
+                            currentTargetKey,
+                            now + BLOCK_DURATION_MS
+                        );
+
+                        console.log(
+                            `Ziel (${result.target.x}, ${result.target.y}) gesperrt fuer ${BLOCK_DURATION_MS / 1000}s nach ${STUCK_LIMIT} Ticks ohne Ankunft`
+                        );
+
+                        sameTargetTicks = 0;
+                    }
+
                     console.log(
                         `Ziel (${result.target.x}, ${result.target.y}) [${result.target.type}], Distanz: ${result.distance}, Richtung: ${result.nextStep}`
                     );
