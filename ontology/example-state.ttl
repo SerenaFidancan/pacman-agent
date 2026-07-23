@@ -1,0 +1,68 @@
+@prefix :     <http://hs-aalen.de/pacman#> .
+@prefix owl:  <http://www.w3.org/2002/07/owl#> .
+@prefix rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
+
+#################################################################
+# Beispiel-Instanzdaten (ABox) fuer genau EINEN Spiel-Tick.
+# Spielgitter: 14 Zeilen (gridY 0..13) x 19 Spalten (gridX 0..18).
+# Dient als Testdatensatz fuer die SPARQL-ASK-Queries (Commit 8).
+#################################################################
+
+#################################################################
+# Spielzustand
+#################################################################
+
+:gameState a :GameState ;
+    :score           240 ;
+    :lives           3 ;
+    :powerModeActive false ;
+    :hasPacMan       :pacman ;
+    :hasGhost        :blinky , :pinky ;
+    :hasPill         :pill1 , :pill2 .
+
+#################################################################
+# Pac-Man
+#################################################################
+
+:pacman a :PacMan ;
+    :gridX     9 ;
+    :gridY     7 ;
+    :direction "L" .
+
+#################################################################
+# Geister
+#################################################################
+
+:blinky a :Ghost ;
+    :ghostName        "Blinky" ;
+    :gridX            9 ;
+    :gridY            4 ;
+    :direction        "D" ;
+    :status           "normal" ;
+    :distanceToPacMan 3 .
+
+:pinky a :Ghost ;
+    :ghostName        "Pinky" ;
+    :gridX            3 ;
+    :gridY            7 ;
+    :direction        "R" ;
+    :status           "vulnerable" ;
+    :distanceToPacMan 6 .
+
+#################################################################
+# Pills
+#################################################################
+
+:pill1 a :Pill ;
+    :gridX            1 ;
+    :gridY            1 ;
+    :pillType         "pill" ;
+    :distanceToPacMan 14 .
+
+:pill2 a :Pill ;
+    :gridX            17 ;
+    :gridY            1 ;
+    :pillType         "powerpill" ;
+    :distanceToPacMan 16 .

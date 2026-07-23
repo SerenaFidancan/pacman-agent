@@ -1,0 +1,126 @@
+@prefix :     <http://hs-aalen.de/pacman#> .
+@prefix owl:  <http://www.w3.org/2002/07/owl#> .
+@prefix rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
+
+#################################################################
+# Ontologie-Header
+#################################################################
+
+<http://hs-aalen.de/pacman> a owl:Ontology ;
+    rdfs:label   "Pac-Man Agentenwissen-Ontologie" ;
+    rdfs:comment "Schema (TBox) fuer das Wissen eines Pac-Man-Agenten. Modelliert den Spielzustand eines einzelnen Ticks (Pac-Man, Geister, Pills) sowie den uebergeordneten Spielzustand (Score, Leben, Power-Modus). Der daraus gebildete RDF-Graph wird von SPARQL-ASK-Queries abgefragt, die die Condition-Nodes eines Behavior Trees steuern." .
+
+#################################################################
+# Klassen
+#################################################################
+
+:Entity a owl:Class ;
+    rdfs:label   "Entity" ;
+    rdfs:comment "Abstrakte Oberklasse fuer alles, was eine Position im Spielgitter besitzt." .
+
+:PacMan a owl:Class ;
+    rdfs:subClassOf :Entity ;
+    rdfs:label   "PacMan" ;
+    rdfs:comment "Die vom Agenten gesteuerte Spielfigur." .
+
+:Ghost a owl:Class ;
+    rdfs:subClassOf :Entity ;
+    rdfs:label   "Ghost" ;
+    rdfs:comment "Ein Geist als Gegner von Pac-Man." .
+
+:Pill a owl:Class ;
+    rdfs:subClassOf :Entity ;
+    rdfs:label   "Pill" ;
+    rdfs:comment "Ein einsammelbares Objekt im Gitter (normale Pille oder Power-Pille)." .
+
+:GameState a owl:Class ;
+    rdfs:label   "GameState" ;
+    rdfs:comment "Der uebergeordnete Spielzustand eines Ticks (Score, Leben, Power-Modus). Besitzt selbst keine Gitterposition und ist daher keine :Entity." .
+
+#################################################################
+# Datatype Properties
+#################################################################
+
+:gridX a owl:DatatypeProperty ;
+    rdfs:domain :Entity ;
+    rdfs:range  xsd:integer ;
+    rdfs:label  "gridX" ;
+    rdfs:comment "Spaltenindex der Entity im Spielgitter." .
+
+:gridY a owl:DatatypeProperty ;
+    rdfs:domain :Entity ;
+    rdfs:range  xsd:integer ;
+    rdfs:label  "gridY" ;
+    rdfs:comment "Zeilenindex der Entity im Spielgitter." .
+
+:direction a owl:DatatypeProperty ;
+    rdfs:domain :Entity ;
+    rdfs:range  xsd:string ;
+    rdfs:label  "direction" ;
+    rdfs:comment "Bewegungsrichtung der Entity. Erlaubte Werte: \"U\" (up), \"D\" (down), \"L\" (left), \"R\" (right), \"None\" (keine Richtung, wenn getDirectionName() nichts passendes liefert)." .
+
+:status a owl:DatatypeProperty ;
+    rdfs:domain :Ghost ;
+    rdfs:range  xsd:string ;
+    rdfs:label  "status" ;
+    rdfs:comment "Zustand eines Geistes. Erlaubte Werte: \"normal\", \"vulnerable\", \"eyes\"." .
+
+:ghostName a owl:DatatypeProperty ;
+    rdfs:domain :Ghost ;
+    rdfs:range  xsd:string ;
+    rdfs:label  "ghostName" ;
+    rdfs:comment "Name des Geistes (Feld name im Spiel-Payload). Erlaubte Werte: \"Blinky\", \"Pinky\", \"Inky\", \"Clyde\"." .
+
+:pillType a owl:DatatypeProperty ;
+    rdfs:domain :Pill ;
+    rdfs:range  xsd:string ;
+    rdfs:label  "pillType" ;
+    rdfs:comment "Art der Pille. Erlaubte Werte: \"pill\", \"powerpill\"." .
+
+:distanceToPacMan a owl:DatatypeProperty ;
+    rdfs:domain :Entity ;
+    rdfs:range  xsd:integer ;
+    rdfs:label  "distanceToPacMan" ;
+    rdfs:comment "Abgeleitetes Wissen: Distanz der Entity zu Pac-Man. Wird pro Tick neu berechnet und gesetzt." .
+
+:score a owl:DatatypeProperty ;
+    rdfs:domain :GameState ;
+    rdfs:range  xsd:integer ;
+    rdfs:label  "score" ;
+    rdfs:comment "Aktueller Punktestand." .
+
+:lives a owl:DatatypeProperty ;
+    rdfs:domain :GameState ;
+    rdfs:range  xsd:integer ;
+    rdfs:label  "lives" ;
+    rdfs:comment "Anzahl der verbleibenden Leben von Pac-Man." .
+
+:powerModeActive a owl:DatatypeProperty ;
+    rdfs:domain :GameState ;
+    rdfs:range  xsd:boolean ;
+    rdfs:label  "powerModeActive" ;
+    rdfs:comment "Gibt an, ob der Power-Modus (Geister verwundbar) aktuell aktiv ist." .
+
+#################################################################
+# Object Property
+#################################################################
+
+:hasPacMan a owl:ObjectProperty ;
+    rdfs:domain :GameState ;
+    rdfs:range  :PacMan ;
+    rdfs:label  "hasPacMan" ;
+    rdfs:comment "Verknuepft den Spielzustand mit der Pac-Man-Instanz dieses Ticks." .
+
+:hasGhost a owl:ObjectProperty ;
+    rdfs:domain :GameState ;
+    rdfs:range  :Ghost ;
+    rdfs:label  "hasGhost" ;
+    rdfs:comment "Verankert einen Geist am aktuellen GameState. So koennen Queries gezielt die Geister des aktuellen Ticks abfragen statt aller je gespeicherten Instanzen." .
+
+:hasPill a owl:ObjectProperty ;
+    rdfs:domain :GameState ;
+    rdfs:range  :Pill ;
+    rdfs:label  "hasPill" ;
+    rdfs:comment "Verankert eine Pill am aktuellen GameState. So koennen Queries gezielt die Pills des aktuellen Ticks abfragen statt aller je gespeicherten Instanzen." .
