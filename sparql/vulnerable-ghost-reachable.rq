@@ -1,0 +1,12 @@
+
+PREFIX : <http://hs-aalen.de/pacman#>
+
+ASK {
+    ?gameState a :GameState ;
+               :hasGhost ?ghost .
+
+    ?ghost :status           "vulnerable" ;
+           :distanceToPacMan ?distance .
+
+    FILTER (?distance <= 8)
+}

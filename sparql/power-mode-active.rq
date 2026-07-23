@@ -1,0 +1,7 @@
+
+PREFIX : <http://hs-aalen.de/pacman#>
+
+ASK {
+    ?gameState a :GameState ;
+               :powerModeActive true .
+}

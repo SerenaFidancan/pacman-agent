@@ -1,0 +1,12 @@
+
+PREFIX : <http://hs-aalen.de/pacman#>
+
+ASK {
+    ?gameState a :GameState ;
+               :hasPill ?pill .
+
+    ?pill :pillType         "powerpill" ;
+          :distanceToPacMan ?distance .
+
+    FILTER (?distance <= 10)
+}

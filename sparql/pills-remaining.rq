@@ -1,0 +1,9 @@
+
+PREFIX : <http://hs-aalen.de/pacman#>
+
+ASK {
+    ?gameState a :GameState ;
+               :hasPill ?pill .
+
+    ?pill a :Pill .
+}
